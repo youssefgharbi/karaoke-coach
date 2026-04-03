@@ -26,3 +26,11 @@ app:
   jwt:
     secret: change-me-before-production
     expiration-minutes: 120
+
+springdoc:
+  swagger-ui:
+    path: /api-docs.html
+    operationsSorter: alpha
+    tagsSorter: alpha
+  api-docs:
+    path: /v3/api-docs

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -21,23 +22,33 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableWebSecurity // 🚀 Explicitly enable web security
 public class SecurityConfig {
+
+    private static final String[] PUBLIC_URLS = {
+            "/api/auth/register",
+            "/api/auth/login",
+            "/media/**",
+            "/v3/api-docs/**",     // 🚀 REQUIRED FOR SWAGGER
+            "/swagger-ui/**",      // 🚀 REQUIRED FOR SWAGGER
+            "/swagger-ui.html",    // 🚀 REQUIRED FOR SWAGGER
+            "/actuator/**"         // For health checks
+    };
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http, AuthTokenFilter authTokenFilter) throws Exception {
         return http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // Disabled for stateless REST APIs
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
-                        .requestMatchers("/media/**").permitAll()
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(PUBLIC_URLS).permitAll() // 🚀 Clearer management of public paths
                         .requestMatchers(HttpMethod.GET, "/api/songs/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/songs").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/songs/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/media/upload").permitAll()
-                        .anyRequest().permitAll())
+                        // 🔒 PROTECT WRITES: Only logged-in users should be able to upload/create
+                        .requestMatchers(HttpMethod.POST, "/api/songs/**", "/api/media/upload").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/songs/**").authenticated()
+                        .anyRequest().authenticated() // 🔒 PRO MOVE: Lock everything else by default
+                )
                 .addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
@@ -54,18 +65,19 @@ public class SecurityConfig {
                         .password(user.getPasswordHash())
                         .authorities("ROLE_USER")
                         .build())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+                .orElseThrow(() -> new UsernameNotFoundException("User " + username + " not found"));
     }
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173")); // Vite dev server
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // 🚀 Be explicit with headers
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration("/**", config);
         return source;
     }
 }
