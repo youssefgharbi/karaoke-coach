@@ -1,27 +1,59 @@
 version: "3.9"
 
 services:
-  postgres:
-    image: postgres:16-alpine
+  db:
+    image: postgres:17-alpine # Use the latest stable version
+    container_name: karaoke-db
     environment:
       POSTGRES_DB: karaoke_coach
-      POSTGRES_USER: karaoke
-      POSTGRES_PASSWORD: karaoke
+      POSTGRES_USER: ${DB_USERNAME:-karaoke}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-karaoke}
     ports:
       - "5432:5432"
+    healthcheck: # 🚀 PRO: Tells other services when the DB is actually READY
+      test: ["CMD-SHELL", "pg_isready -U karaoke -d karaoke_coach"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # 🚀 PRO: Saves your data if the container stops
+    networks:
+      - karaoke-network
 
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
+    container_name: karaoke-api
     ports:
       - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/karaoke_coach
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-karaoke}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-karaoke}
+      SPRING_FLYWAY_URL: jdbc:postgresql://db:5432/karaoke_coach
     depends_on:
-      - postgres
+      db:
+        condition: service_healthy # 🚀 PRO: Backend won't start until DB is 100% ready
+    networks:
+      - karaoke-network
 
   frontend:
     build:
       context: ./frontend
+    container_name: karaoke-ui
     ports:
       - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8080/api
     depends_on:
       - backend
+    networks:
+      - karaoke-network
+
+networks:
+  karaoke-network: # 🚀 PRO: Isolates your app from other things running on your PC
+    driver: bridge
+
+volumes:
+  postgres_data: # Define the volume for persistence
