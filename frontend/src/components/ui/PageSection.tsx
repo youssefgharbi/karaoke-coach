@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { cn } from "@/shared/lib/utils"; // Adjust path if needed
+import { cn } from "../../shared/lib/utils";
 
 type PageSectionProps = PropsWithChildren<{
   title: string;
