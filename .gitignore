@@ -23,3 +23,5 @@ mvnw.cmd
 
 # Logs
 *.log
+
+backend/uploads/
