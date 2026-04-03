@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: karaoke-coach
+  datasource:
+    url: jdbc:postgresql://localhost:5432/karaoke_coach
+    username: postgres
+    password: 34859c3459e44cc5b3f8462e9b208d44
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: false
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: change-me-before-production
+    expiration-minutes: 120

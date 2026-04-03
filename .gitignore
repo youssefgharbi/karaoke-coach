@@ -1,0 +1,25 @@
+# Node/React
+node_modules/
+dist/
+.env
+.env.local
+
+# Java/Spring Boot
+target/
+*.class
+.mvn/
+mvnw
+mvnw.cmd
+.settings/
+.classpath
+.project
+.factorypath
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.DS_Store
+
+# Logs
+*.log
