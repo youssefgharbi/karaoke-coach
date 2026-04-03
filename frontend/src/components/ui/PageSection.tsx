@@ -1,40 +1,43 @@
 import type { PropsWithChildren } from "react";
+import { cn } from "@/shared/lib/utils"; // Adjust path if needed
 
 type PageSectionProps = PropsWithChildren<{
   title: string;
   description?: string;
+  className?: string; // Allows for dynamic styling from outside
 }>;
 
-export function PageSection({ title, description, children }: PageSectionProps) {
+export function PageSection({ title, description, children, className }: PageSectionProps) {
   return (
-    <section
-      style={{
-        padding: "1.6rem",
-        border: "1px solid var(--border-soft)",
-        borderRadius: 28,
-        background:
-          "linear-gradient(180deg, rgba(8, 18, 28, 0.9), rgba(13, 28, 35, 0.84) 46%, rgba(8, 17, 23, 0.92))",
-        boxShadow: "0 28px 64px rgba(0, 0, 0, 0.24)",
-        position: "relative",
-        overflow: "hidden",
-      }}
+    <section 
+      className={cn(
+        "relative overflow-hidden rounded-[28px] border border-white/10 p-6 shadow-2xl transition-all",
+        "bg-gradient-to-b from-[#08121c]/90 via-[#0d1c23]/84 to-[#081117]/92",
+        className
+      )}
     >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background:
-            "radial-gradient(circle at top right, rgba(110, 231, 183, 0.09), transparent 28%), radial-gradient(circle at left bottom, rgba(251, 191, 36, 0.08), transparent 32%)",
-          pointerEvents: "none",
-        }}
-      />
-      <div style={{ marginBottom: "1rem" }}>
-        <h2 style={{ margin: 0, fontSize: "1.45rem", position: "relative", zIndex: 1 }}>{title}</h2>
-        {description ? (
-          <p style={{ opacity: 0.8, maxWidth: 760, position: "relative", zIndex: 1 }}>{description}</p>
-        ) : null}
+      {/* Dynamic Glow Overlays (Modern Glassmorphism) */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(110,231,183,0.09),transparent_28%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_left_bottom,rgba(251,191,36,0.08),transparent_32%)]" />
       </div>
-      <div style={{ position: "relative", zIndex: 1 }}>{children}</div>
+
+      {/* Header Content */}
+      <div className="relative z-10 mb-4 space-y-1">
+        <h2 className="text-2xl font-bold tracking-tight text-white/90">
+          {title}
+        </h2>
+        {description && (
+          <p className="max-w-[760px] text-sm leading-relaxed text-white/60">
+            {description}
+          </p>
+        )}
+      </div>
+
+      {/* Main Content Area */}
+      <div className="relative z-10">
+        {children}
+      </div>
     </section>
   );
 }
